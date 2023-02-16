@@ -58,7 +58,7 @@ const grammar: Grammar = {
     intent: "None",
     entities: { day: "Monday" },
   },
-  "7 in the evening": {
+  "seven in the evening": {
     intent: "None",
     entities: { time: "7" },
   },
@@ -94,7 +94,7 @@ const grammar: Grammar = {
     intent: "None",
     entities: { confirmation: "yes" },
   },
-  "yes, please. Thanks!": {
+  "yes, please. thanks!": {
     intent: "None",
     entities: { confirmation: "yes" },
   },
@@ -106,7 +106,7 @@ const grammar: Grammar = {
     intent: "None",
     entities: { confirmation: "yeah" },
   },
-  "yes yes": {
+  "yes, yes": {
     intent: "None",
     entities: { confirmation: "yes" },
   },
@@ -351,7 +351,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say("Let's create a meeting. What is it about?"),
+          entry: say("Perfect! Let's create a meeting. What is it about?"),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
@@ -453,7 +453,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
     },
     wholeDay: {
-      entry: say("Let's create the meeting"),
+      entry: say("Awesome! Let's create the meeting"),
       on: { ENDSPEECH: "confirmMeetingWholeDay" },
     },
     whenTime: {
@@ -582,7 +582,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
     meetingCreated: {
       entry: send((context) => ({
         type: "SPEAK", 
-        value: "Your meeting has been created!",
+        value: "Amazing! Your meeting has been created!",
       })),
       on: { ENDSPEECH: "init" },
     },
