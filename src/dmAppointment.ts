@@ -227,7 +227,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
             cond: (context) => context.nluResult.prediction.topIntent === "createMeeting" &&
                !!getEntity(context, "meetingType"),
              actions: assign({
-               title: (context) => getEntity(context, "meetingType") //{return context.nluResult.prediction.entities[0].text}
+               title: (context) => getEntity(context, "meetingType")
               }),
           },
           {
@@ -239,9 +239,10 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
           },
           {
             target: "whoIsX",
-            cond: (context) => context.nluResult.prediction.topIntent === "whoIsX",
+            cond: (context) => context.nluResult.prediction.topIntent === "whoIsX" &&
+            !!getEntity(context, "celeb"),
              actions: assign({
-               celeb: (context) => {return context.nluResult.prediction.entities[0].text}
+               celeb: (context) => getEntity(context, "celeb")
               }),
           },
           {
