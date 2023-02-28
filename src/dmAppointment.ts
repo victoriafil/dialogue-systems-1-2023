@@ -12,7 +12,7 @@ interface Grammar {
     };
   };
 }
-
+/*
 const grammar: Grammar = {
   lecture: {
     intent: "None",
@@ -147,17 +147,29 @@ const grammar: Grammar = {
     entities: {question: "I want to ask a question"}
   }
 };
+*/
 
-const getEntity = (context: SDSContext, entity: string) => {
-  // lowercase the utterance and remove tailing "."
-  let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
-  if (u in grammar) {
-    if (entity in grammar[u].entities) {
-      return grammar[u].entities[entity];
+const getEntity = (context: SDSContext, category: string) => {
+  const result = [];
+  const entities = context.nluResult.prediction.entities
+  for (let i = 0; i < entities.length; i++) {
+    if (entities[i].category === category) {
+      result.push(entities[i].text);
+      return result
     }
   }
   return false;
 };
+  // lowercase the utterance and remove tailing "."
+  //let query = context.nluResult.query.toLowerCase().replace(/\.$/g, "");
+  //for (let i = 0;entities && i < entities.length; i++) {
+    
+  /*if (u in grammar) {
+    if (entity in grammar[u].entities) {
+      return grammar[u].entities[entity];
+    }
+  }*/
+ 
 
 export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
   initial: "idle",
@@ -169,8 +181,40 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
     },
     init: {
       on: {
-        TTS_READY: "hello",
-        CLICK: "hello",
+        TTS_READY: "introduction",
+        CLICK: "introduction",
+      },
+    },
+    introduction: {
+      initial: "prompt",
+      on: {
+        RECOGNISED: [
+          {
+            target: "hello",
+            actions: assign({
+              name: (context) => context.recResult[0].utterance.replace(/\.$/g, "")
+            }),
+          },
+          {
+            target: ".noname",
+          },
+        ],
+        TIMEOUT: ".prompt",
+      },
+      states: {
+        prompt: {
+          entry: say("Hello! I am your new personal assistant, Mary. What is your name?"),
+          on: { ENDSPEECH: "ask" },
+        },
+        ask: {
+          entry: send("LISTEN"),
+        },
+        noname: {
+          entry: say(
+            "Sorry, I couldn't quite catch that. What is your name?"
+          ),
+          on: { ENDSPEECH: "ask" },
+        },
       },
     },
     hello: {
@@ -179,18 +223,26 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       on: {
         RECOGNISED: [
           {
+            target: "whenDay",
+            cond: (context) => context.nluResult.prediction.topIntent === "createMeeting" &&
+               !!getEntity(context, "meetingType"),
+             actions: assign({
+               title: (context) => getEntity(context, "meetingType") //{return context.nluResult.prediction.entities[0].text}
+              }),
+          },
+          {
             target: "createAMeeting",
-            cond: (context) => !!getEntity(context, "meeting"),
-            actions: assign({
-              meeting: (context) => getEntity(context, "meeting"),
-            }),
+            cond: (context) => context.nluResult.prediction.topIntent === "createMeeting",
+             actions: assign({
+              meeting: (context) => context.nluResult.query,
+        }),
           },
           {
             target: "whoIsX",
-            cond: (context) => !!getEntity(context, "question"),
-            actions: assign({
-              question: (context) => getEntity(context, "question"),
-            }),
+            cond: (context) => context.nluResult.prediction.topIntent === "whoIsX",
+             actions: assign({
+               celeb: (context) => {return context.nluResult.prediction.entities[0].text}
+              }),
           },
           {
             target: ".nomatch",
@@ -200,7 +252,10 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say("Hi, Victoria! Good to see you today! Do you want to create a meeting or ask a question about someone?"),
+          entry: send((context) => ({
+            type: "SPEAK",
+            value: `Nice to meet you ${context.name}! What can I help you with today?`
+          })),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
@@ -208,33 +263,30 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         },
         nomatch: {
           entry: say(
-            "Sorry, I don't know what it is. Tell me something I know."
+            "I can either help you schedule a meeting, or you can ask me about someone famous."
           ),
           on: { ENDSPEECH: "ask" },
         },
       },
     },
     whoIsX: {
-      initial: "prompt",
+      initial: "xIs",
       on: {
         RECOGNISED: [
           {
             target: ".xIs",
-            actions: assign({name:  
-              context => {return context.recResult[0].utterance}
-            }),
           },
           {
             target: ".nomatch",
           },
         ],
-        TIMEOUT: ".prompt",
+        TIMEOUT: "#hello",
       },
       states: {
         xIs: {
           invoke: {
             id: 'getXIs',
-            src: (context, event) => kbRequest(context.name),
+            src: (context, event) => kbRequest(context.celeb),
             onDone: [{
               target: 'success',
               cond: (context, event) => event.data.Abstract !== "",
@@ -252,27 +304,23 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         success: {
           entry: send((context) => ({
             type: "SPEAK",
-            value: `This is what I know about ${context.name}. ${context.information.Abstract}`
+            value: `This is what I know about ${context.celeb}. ${context.information.Abstract}`
           })),
           on: {ENDSPEECH: "#meetingX"}
         },
         failure: {
           entry: send((context) => ({
             type: "SPEAK",
-            value: `Sorry, I don't know anything about ${context.name}. Ask me about someone else!`
+            value: `Sorry, I don't seem to know anything about ${context.celeb}. Ask me about someone else!`
           })),
-          on: {ENDSPEECH: "prompt"}
+          on: {ENDSPEECH: "#hello"}
         },
-          prompt: {
-            entry: say("Of course! Who would you like to know about?"),
-            on: { ENDSPEECH: "ask" },
-          },
           ask: {
             entry: send("LISTEN"),
           },
           nomatch: {
             entry: say(
-              "Sorry, I don't know what it is. Tell me something I know."
+              "Sorry, I don't really understand you. Tell me something else."
             ),
             on: { ENDSPEECH: "ask" },
           },
@@ -285,17 +333,11 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "denyMeeting",
-            cond: (context) => !!getEntity(context, "denial"),
-            actions: assign({
-              denial: (context) => getEntity(context, "denial"),
-            }), 
+            cond: (context) => context.nluResult.prediction.topIntent === "denial",
           },
           {
             target: "acceptMeeting",
-            cond: (context) => !!getEntity(context, "confirmation"),
-            actions: assign({
-              confirmation: (context) => getEntity(context, "confirmation"),
-            }), 
+            cond: (context) => context.nluResult.prediction.topIntent === "confirmation", 
           },
           {
             target: ".nomatch",
@@ -325,12 +367,11 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
     },
     acceptMeeting: {
       entry: [
-        say("That's so great!"),
-        assign((context) => ({title: `meeting with ${context.name}`}))
+        say("Perfect!"),
+        assign((context) => ({title: `meeting with ${context.celeb}`}))
       ],
       on: { ENDSPEECH: "whenDay" },
       },
-
     createAMeeting: {
       id: "createAMeeting",
       initial: "prompt",
@@ -338,9 +379,15 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "info",
-            cond: (context) => !!getEntity(context, "title"),
+            cond: (context) => !!getEntity(context, "meetingType"),
             actions: assign({
-              title: (context) => getEntity(context, "title"),
+              title: (context) => getEntity(context, "meetingType"),
+            }),
+          },
+          {
+            target: "info",
+            actions: assign({
+              title: (context) => context.nluResult.query,
             }),
           },
           {
@@ -359,7 +406,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         },
         nomatch: {
           entry: say(
-            "Sorry, I don't know what it is. Tell me something else."
+            "Sorry, I don't think I know what that is. Tell me something else."
           ),
           on: { ENDSPEECH: "ask" },
         },
@@ -378,9 +425,9 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "appointmentDay",
-            cond: (context) => !!getEntity(context, "day"),
+            cond: (context) => !!getEntity(context, "dateTime"),
             actions: assign({ 
-              day: (context) => getEntity(context, "day"),
+              day: (context) => getEntity(context, "dateTime"),
             }),
           },
           {
@@ -391,7 +438,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say("On which day is your meeting taking place?"),
+          entry: say("On which day would you like me to schedule your meeting?"),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
@@ -418,17 +465,11 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "wholeDay", 
-            cond: (context) => !!getEntity(context, "confirmation"),
-            actions: assign({ 
-              confirmation: (context) => getEntity(context, "confirmation"),
-            }),
+            cond: (context) => context.nluResult.prediction.topIntent === "confirmation",
           },
           {
             target: "whenTime", 
-            cond: (context) => !!getEntity(context, "denial"),
-            actions: assign({ 
-              denial: (context) => getEntity(context, "denial"),
-            }),
+            cond: (context) => context.nluResult.prediction.topIntent === 'denial',
           },
           {
             target: ".nomatch",
@@ -438,7 +479,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say(`Is your meeting going to take the whole day?`),
+          entry: say("Is your meeting going to take the whole day?"),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
@@ -446,7 +487,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         },
         nomatch: {
           entry: say(
-            "Sorry, I don't know what it is. Tell me something I know."
+            "Sorry, I'm not sure I understand that. Tell me again."
           ),
           on: { ENDSPEECH: "ask" },
         },
@@ -462,9 +503,9 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "timeOfDay",
-            cond: (context) => !!getEntity(context, "time"),
+            cond: (context) => !!getEntity(context, "dateTime"),
             actions: assign({
-              time: (context) => getEntity(context, "time"),
+              time: (context) => getEntity(context, "dateTime"),
             }),
           },
           {
@@ -499,17 +540,11 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "meetingCreated", 
-            cond: (context) => !!getEntity(context, "confirmation"),
-            actions: assign({ 
-              confirmation: (context) => getEntity(context, "confirmation"),
-            }),
+            cond: (context) => context.nluResult.prediction.topIntent === "confirmation",
           },
           {
             target: "incorrectInfo", 
-            cond: (context) => !!getEntity(context, "denial"),
-            actions: assign({ 
-              denial: (context) => getEntity(context, "denial"),
-            }),
+            cond: (context) => context.nluResult.prediction.topIntent === "denial",
           },
           {
             target: ".nomatch",
@@ -530,7 +565,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         },
         nomatch: {
           entry: say(
-            "Sorry, I don't know what it is. Tell me something I know."
+            "Sorry, I find it difficult to understand."
           ),
           on: { ENDSPEECH: "ask" },
         },
@@ -542,17 +577,11 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "meetingCreated",
-            cond: (context) => !!getEntity(context, "confirmation"),
-            actions: assign({ 
-              confirmation: (context) => getEntity(context, "confirmation"),
-            }),
+            cond: (context) => context.nluResult.prediction.topIntent === "confirmation",
           },
           {
             target: "incorrectInfo", 
-            cond: (context) => !!getEntity(context, "denial"),
-            actions: assign({ 
-              denial: (context) => getEntity(context, "denial"),
-            }),
+            cond: (context) => context.nluResult.prediction.topIntent === "denial",
           },
           {
             target: ".nomatch",
@@ -582,14 +611,14 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
     meetingCreated: {
       entry: send((context) => ({
         type: "SPEAK", 
-        value: "Amazing! Your meeting has been created!",
+        value: "Amazing! Your meeting has been created! See you!",
       })),
       on: { ENDSPEECH: "init" },
     },
     incorrectInfo: {
       entry: send((context) => ({
         type: "SPEAK", 
-        value: "Sorry, let's try again!",
+        value: "Sorry, it's probably my fault. Let's try again!",
       })),
       on: { ENDSPEECH: "init" },
     },

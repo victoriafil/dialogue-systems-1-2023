@@ -57,6 +57,11 @@ interface SDSContext {
   information: any;
   error: any;
   question: any;
+  celeb: any;
+  text: any;
+  entities: any;
+  prediction: any;
+  category: string;
 }
 
 type SDSEvent =
