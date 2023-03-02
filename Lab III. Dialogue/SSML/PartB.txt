@@ -1,0 +1,8 @@
+<!--ID=B7267351-473F-409D-9765-754A8EBCDE05;Version=1|{"VoiceNameToIdMapItems":[{"Id":"27e2f1c8-cfe0-4324-88e2-cd0bafeffe1b","Name":"Microsoft Server Speech Text to Speech Voice (en-US, AriaNeural)","ShortName":"en-US-AriaNeural","Locale":"en-US","VoiceType":"StandardVoice"}]}-->
+<!--ID=FCB40C2B-1F9F-4C26-B1A1-CF8E67BE07D1;Version=1|{"Files":{}}-->
+<!--ID=5B95B1CC-2C7B-494F-B746-CF22A0E779B7;Version=1|{"Locales":{"en-US":{"AutoApplyCustomLexiconFiles":[{}]}}}-->
+<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="en-US"><voice name="en-US-AriaNeural">This is what I know about Zach <phoneme alphabet="ipa" ph="ga.li.fia.naˈ.kis">Galifianakis</phoneme>.
+This is what I know about Angelina <phoneme alphabet="ipa" ph="dʒoʊ.ˈli">Jolie</phoneme>.
+This is what I know about Lady Gaga. <phoneme alphabet="ipa" ph="ˈstɛ.fə.ni">Stefani</phoneme> Joanne Angelina <phoneme alphabet="ipa" ph="dʒɜ.mə.ˈna.tə">Germanotta</phoneme>, known professionally as Lady Gaga, is an American singer, songwriter, and actress.
+Law gained recognition for his role in Anthony <phoneme alphabet="ipa" ph="mɪŋ.ˈge.ləs">Minghella's</phoneme> The Talented Mr. Ripley
+while its Spanish-language follow up, Mi <phoneme alphabet="ipa" ph="ɹɛ.ˈfle.ho">Reflejo</phoneme>, is noted for contributing to the 2000s Latin pop boom.</voice></speak>
