@@ -1,0 +1,37 @@
+Part 2.3
+===============================
+A similar threshold can be implemented for NLU as well, by accessing the confidence score in the topIntent category from the XState visualization. If combined with the ASR threshold, the dialogue system can become more accurate in predicting the user's intents, in that it will only transition to a next state if the confidence is is high enough to justify the correctness of the interpreted intent.
+Two ways this combination can be implemented are that, a) if the system's ASR confidence is not high enough, it checks the NLU confidence threshold, and b) both thresholds are being checked at the same time. If the conditions are met, the system proceeds with the specified transition, otherwise it asks a clarification question.
+A sketch implementation, based on the dmAppointmentPlus.ts in my src repository, would be something like the following:
+
+```
+ const getAsrConfidence = (context: SDSContext) => {
+    let u = context.recResult[0].confidence
+    if (u > 0.60) {
+      return true
+    } else {
+      return false
+    }
+  };
+
+const getNluConfidence = (context: SDSContext) => {
+    let u = context.nluResult.prediction.intents[0].confidenceScore
+    if (u > 0.80) {
+      return true
+    } else {
+      return false
+    }
+  };
+
+//example transition
+{
+     target: "createAMeeting",
+     cond: (context) => !!getEntity(context, "meeting") && getAsrConfidence(context) === true && getNluConfidence(context) === true,
+     actions: assign({
+      meeting: (context) => getEntity(context, "meeting"),
+     }),
+    },
+
+```
+
+In the above way, the transition to "createAMeeting" event will only be made if the ASR and the NLU confidence are above 60% and 80% respectively.
