@@ -62,6 +62,11 @@ interface SDSContext {
   entities: any;
   prediction: any;
   category: string;
+  help: any;
+  hist: any;
+  stateName: any;
+  count: number;
+  promptMessage: string;
 }
 
 type SDSEvent =
