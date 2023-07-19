@@ -67,6 +67,14 @@ interface SDSContext {
   stateName: any;
   count: number;
   promptMessage: string;
+  nickname: any;
+  score: number;
+  time: number;
+  item: any;
+  arrayOfImages: any;
+  picture: any;
+  response: any;
+  arrayOfResponses: any;
 }
 
 type SDSEvent =

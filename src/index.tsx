@@ -4,7 +4,7 @@ import * as ReactDOM from "react-dom";
 import { createMachine, assign, actions, State } from "xstate";
 import { useMachine } from "@xstate/react";
 import { inspect } from "@xstate/inspect";
-import { dmMachine } from "./dmAppointmentPlus";
+import { dmMachine } from "./dmRolePlayGame";
 
 import createSpeechRecognitionPonyfill from "web-speech-cognitive-services/lib/SpeechServices/SpeechToText";
 import createSpeechSynthesisPonyfill from "web-speech-cognitive-services/lib/SpeechServices/TextToSpeech";
@@ -275,6 +275,16 @@ const ReactiveButton = (props: Props): JSX.Element => {
   );
 };
 
+function getImage(context: SDSContext, thing: any) {
+  const elem = document.getElementById("image");
+  if (elem) {
+    const img = elem.innerHTML = `<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+    <img src="/img/${thing}.jpg" width="400" height="400"/>
+  </div>`;
+    return img
+  }
+};
+
 function App({ domElement }: any) {
   const externalContext = {
     parameters: {
@@ -410,3 +420,12 @@ const getIntents = (context: SDSContext) =>
 
 const rootElement = document.getElementById("speechstate");
 ReactDOM.render(<App domElement={rootElement} />, rootElement);
+
+
+function GameState({score} : {score: number}) {
+  return (
+    <p>
+      Score: {score}
+    </p>
+  );
+}
