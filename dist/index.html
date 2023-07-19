@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Speechstate</title>
+    <style>
+      .App {
+        height: 0 !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="speechstate"
+      data-azure-key="51a782b6273c4bebb54d1e04b0e108e0"
+      data-azure-nlu-key = "aa11fec0b74b4c5dbfc3172246bb4a8c" 
+      data-azure-nlu-url = "https://nlu-language-resource.cognitiveservices.azure.com/language/:analyze-conversations?api-version=2022-10-01-preview"
+      data-azure-nlu-project-name = "finalProject"
+      data-azure-nlu-deployment-name = "finalProject"
+      data-tts-voice="en-US, TonyNeural"
+      data-asr-language="en-US"
+    >
+    </div>
+    <div id="image"></div>
+    <div id="score"></div>
+    <div>Time left : <span id="timer"></span></div>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <link href="index.css" rel="stylesheet" />
+    <script src="index.js"></script>
+  </body>
+</html>
